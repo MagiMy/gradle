@@ -35,11 +35,10 @@ import static org.gradle.internal.resources.DefaultResourceLockCoordinationServi
 import static org.gradle.internal.resources.DefaultResourceLockCoordinationService.unlock
 import static org.gradle.util.Path.path
 
-class DefaultWorkerLeaseServiceProjectLockTest extends ConcurrentSpec {
+class DefaultWorkerLeaseServiceProjectLockTest extends AbstractWorkerLeaseServiceTest {
     @Rule
     SetSystemProperties properties = new SetSystemProperties()
-    def coordinationService = new DefaultResourceLockCoordinationService()
-    def workerLeaseService = new DefaultWorkerLeaseService(coordinationService, parallel())
+    def workerLeaseService = workerLeaseService()
 
     def "can lock and unlock a project"() {
         def projectLock = workerLeaseService.getProjectLock(path("root"), path(":project"))
@@ -736,17 +735,5 @@ class DefaultWorkerLeaseServiceProjectLockTest extends ConcurrentSpec {
             }
         })
         return held.get()
-    }
-
-    ParallelismConfiguration parallel(boolean parallelEnabled) {
-        return new DefaultParallelismConfiguration(parallelEnabled, 1)
-    }
-
-    ParallelismConfiguration notParallel() {
-        return parallel(false)
-    }
-
-    ParallelismConfiguration parallel() {
-        return parallel(true)
     }
 }
