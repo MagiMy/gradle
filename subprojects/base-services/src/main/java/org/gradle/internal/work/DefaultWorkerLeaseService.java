@@ -198,12 +198,12 @@ public class DefaultWorkerLeaseService implements WorkerLeaseService, Stoppable 
                 locks.addAll(projectLocks);
                 locks.addAll(workerLeaseLockRegistry.getResourceLocksByCurrentThread());
                 withoutLocks(locks, action);
+                return;
             }
-        } else {
-            // Else, release only the worker lease
-            List<? extends ResourceLock> locks = workerLeaseLockRegistry.getResourceLocksByCurrentThread();
-            withoutLocks(locks, action);
         }
+        // Else, release only the worker lease
+        List<? extends ResourceLock> locks = workerLeaseLockRegistry.getResourceLocksByCurrentThread();
+        withoutLocks(locks, action);
     }
 
     @Override
