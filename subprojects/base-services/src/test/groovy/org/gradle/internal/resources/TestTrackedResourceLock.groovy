@@ -31,7 +31,7 @@ class TestTrackedResourceLock extends AbstractTrackedResourceLock {
     TestTrackedResourceLock(String displayName, ResourceLockCoordinationService coordinationService, ResourceLockContainer owner, boolean lockedState, boolean hasLock) {
         super(displayName, coordinationService, owner)
         this.lockedState.set(lockedState)
-        if (lockedState) {
+        if (hasLock) {
             this.owner.set(Thread.currentThread())
         }
     }
