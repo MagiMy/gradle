@@ -84,7 +84,7 @@ public interface ExecutionPlan extends Describable, Closeable {
 
         @Override
         public ScheduledNodes getScheduledNodes() {
-            return visitor -> {};
+            return visitor -> visitor.accept(Collections.emptyList());
         }
 
         @Override
