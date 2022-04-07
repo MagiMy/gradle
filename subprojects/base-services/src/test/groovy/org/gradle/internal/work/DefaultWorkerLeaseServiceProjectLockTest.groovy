@@ -17,13 +17,9 @@
 package org.gradle.internal.work
 
 import org.gradle.api.Transformer
-import org.gradle.concurrent.ParallelismConfiguration
 import org.gradle.internal.MutableBoolean
-import org.gradle.internal.concurrent.DefaultParallelismConfiguration
-import org.gradle.internal.resources.DefaultResourceLockCoordinationService
 import org.gradle.internal.resources.ResourceLock
 import org.gradle.internal.resources.ResourceLockState
-import org.gradle.test.fixtures.concurrent.ConcurrentSpec
 import org.gradle.util.SetSystemProperties
 import org.junit.Rule
 

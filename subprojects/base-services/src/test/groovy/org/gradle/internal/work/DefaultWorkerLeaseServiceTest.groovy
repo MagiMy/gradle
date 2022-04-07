@@ -17,8 +17,6 @@
 package org.gradle.internal.work
 
 import org.gradle.internal.Factory
-import org.gradle.internal.resources.ResourceLockContainer
-import org.gradle.internal.resources.TestTrackedResourceLock
 
 class DefaultWorkerLeaseServiceTest extends AbstractWorkerLeaseServiceTest {
     def workerLeaseService = workerLeaseService()
