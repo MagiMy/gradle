@@ -324,11 +324,23 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
         }
         ordinalNodeAccess.createInterNodeRelationships();
         nodeMapping.addAll(ordinalNodeAccess.getAllNodes());
-        executionQueue.clear();
         dependencyResolver.clear();
+    }
+
+    @Override
+    public void finalizePlan() {
         executionQueue.addAll(nodeMapping);
+        for (Node node : executionQueue) {
+            node.updateAllDependenciesComplete();
+            if (node.allDependenciesComplete()) {
+                readyNodes.add(node);
+            }
+        }
 
         lockCoordinator.addLockReleaseListener(resourceUnlockListener);
+
+        maybeNodesSelectable = true;
+        maybeNodesReady = true;
     }
 
     private void addFinalizerToQueue(LinkedList<NodeInVisitingSegment> nodeQueue, int visitingSegmentCounter, Node finalizer) {
@@ -370,17 +382,7 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
     }
 
     @Override
-    public WorkSource<Node> finalizePlan() {
-        for (Node node : executionQueue) {
-            node.updateAllDependenciesComplete();
-            if (node.allDependenciesComplete()) {
-                readyNodes.add(node);
-            }
-        }
-
-        maybeNodesSelectable = true;
-        maybeNodesReady = true;
-
+    public WorkSource<Node> asWorkSource() {
         // For now
         return this;
     }

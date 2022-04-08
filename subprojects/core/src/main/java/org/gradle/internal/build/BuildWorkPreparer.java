@@ -28,7 +28,7 @@ public interface BuildWorkPreparer {
     ExecutionPlan newExecutionPlan();
 
     /**
-     * Populates the given execution plan using the given action.
+     * Populates the given execution plan using the given action. May be called zero or more times.
      */
     void populateWorkGraph(GradleInternal gradle, ExecutionPlan plan, Consumer<? super ExecutionPlan> action);
 

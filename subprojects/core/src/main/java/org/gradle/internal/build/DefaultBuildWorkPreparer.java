@@ -44,6 +44,7 @@ public class DefaultBuildWorkPreparer implements BuildWorkPreparer {
 
     @Override
     public void finalizeWorkGraph(GradleInternal gradle, ExecutionPlan plan) {
+        plan.finalizePlan();
         TaskExecutionGraphInternal taskGraph = gradle.getTaskGraph();
         taskGraph.populate(plan);
         BuildOutputCleanupRegistry buildOutputCleanupRegistry = gradle.getServices().get(BuildOutputCleanupRegistry.class);

@@ -123,9 +123,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         def a = brokenTask("a", failure)
 
         given:
-        executionPlan.addEntryTasks([a])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([a])
 
         when:
         def result = taskGraph.execute(executionPlan)
@@ -257,9 +255,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         Task d = task("d", c)
 
         when:
-        executionPlan.addEntryTasks([d])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([d])
 
         then:
         taskGraph.hasTask(":a")
@@ -280,9 +276,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         Task a = task("a", b)
 
         when:
-        executionPlan.addEntryTasks([a])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([a])
 
         then:
         taskGraph.allTasks == [c, d, b, a]
@@ -300,9 +294,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         Task c = task("c")
 
         when:
-        executionPlan.addEntryTasks([b])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([b])
         taskGraph.allTasks
         taskGraph.execute(executionPlan)
 
@@ -339,6 +331,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         when:
         def plan2 = newExecutionPlan()
         plan2.addEntryTasks([c])
+        plan2.finalizePlan()
         plan2.determineExecutionPlan()
         taskGraph.populate(plan2)
 
@@ -385,9 +378,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
 
         when:
         taskGraph.addTaskExecutionGraphListener(listener)
-        executionPlan.addEntryTasks([a])
-        taskGraph.populate(executionPlan)
-        taskGraph.execute(executionPlan)
+        populateAndExecute([a])
 
         then:
         1 * listener.graphPopulated(_)
@@ -423,9 +414,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         when:
         taskGraph.whenReady(closure)
         taskGraph.whenReady(action)
-        executionPlan.addEntryTasks([a])
-        taskGraph.populate(executionPlan)
-        taskGraph.execute(executionPlan)
+        populate([a])
 
         then:
         1 * closure.call()
@@ -532,9 +521,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
 
         when:
         executionPlan.useFilter(spec)
-        executionPlan.addEntryTasks([a, b])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([a, b])
 
         then:
         taskGraph.allTasks == [b]
@@ -559,9 +546,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
 
         when:
         executionPlan.useFilter(spec)
-        executionPlan.addEntryTasks([c])
-        executionPlan.determineExecutionPlan()
-        taskGraph.populate(executionPlan)
+        populate([c])
 
         then:
         taskGraph.allTasks == [b, c]
@@ -594,10 +579,15 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
         failures == [failure]
     }
 
-    void populateAndExecute(List<Task> tasks) {
+    void populate(List<Task> tasks) {
         executionPlan.addEntryTasks(tasks)
         executionPlan.determineExecutionPlan()
+        executionPlan.finalizePlan()
         taskGraph.populate(executionPlan)
+    }
+
+    void populateAndExecute(List<Task> tasks) {
+        populate(tasks)
         executedTasks.clear()
         failures.clear()
         def result = taskGraph.execute(executionPlan)
@@ -606,6 +596,7 @@ class DefaultTaskExecutionGraphSpec extends AbstractExecutionPlanSpec {
 
     void execute() {
         executionPlan.determineExecutionPlan()
+        executionPlan.finalizePlan()
         taskGraph.populate(executionPlan)
         executedTasks.clear()
         failures.clear()
