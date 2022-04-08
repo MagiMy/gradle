@@ -453,6 +453,11 @@ public abstract class Node implements Comparable<Node> {
     }
 
     @OverridingMethodsMustInvokeSuper
+    public Iterable<Node> getWeakSuccessors() {
+        return Collections.emptyList();
+    }
+
+    @OverridingMethodsMustInvokeSuper
     public Iterable<Node> getAllSuccessorsInReverseOrder() {
         return dependencySuccessors.descendingSet();
     }

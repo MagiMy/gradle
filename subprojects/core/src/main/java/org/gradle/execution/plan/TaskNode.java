@@ -75,6 +75,11 @@ public abstract class TaskNode extends Node {
         return finalizingSuccessors.descendingSet();
     }
 
+    @Override
+    public Iterable<Node> getWeakSuccessors() {
+        return shouldSuccessors;
+    }
+
     public Set<Node> getShouldSuccessors() {
         return shouldSuccessors;
     }
@@ -123,8 +128,7 @@ public abstract class TaskNode extends Node {
         return Iterables.concat(
             super.getAllSuccessorsInReverseOrder(),
             mustSuccessors.descendingSet(),
-            getGroup().getSuccessorsInReverseOrder(),
-            shouldSuccessors.descendingSet()
+            getGroup().getSuccessorsInReverseOrder()
         );
     }
 

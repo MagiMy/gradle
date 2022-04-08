@@ -244,12 +244,12 @@ public class DefaultTaskExecutionGraph implements TaskExecutionGraphInternal {
 
     @Override
     public boolean hasTask(Task task) {
-        return executionPlan.getTasks().contains(task);
+        return getAllTasks().contains(task);
     }
 
     @Override
     public boolean hasTask(String path) {
-        for (Task task : executionPlan.getTasks()) {
+        for (Task task : getAllTasks()) {
             if (task.getPath().equals(path)) {
                 return true;
             }

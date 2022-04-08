@@ -106,6 +106,8 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
     private Consumer<LocalTaskNode> completionHandler = localTaskNode -> {
     };
 
+    private final List<Node> readyNodes = new ArrayList<>();
+
     // When true, there may be nodes that are "ready", which means their dependencies have completed and the action is ready to execute
     // When false, there are definitely no nodes that are "ready"
     private boolean maybeNodesReady;
@@ -357,6 +359,7 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
         entryNodes.clear();
         nodeMapping.clear();
         executionQueue.clear();
+        readyNodes.clear();
         runningNodes.clear();
         for (Node node : filteredNodes) {
             node.reset();
@@ -370,6 +373,9 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
     public WorkSource<Node> finalizePlan() {
         for (Node node : executionQueue) {
             node.updateAllDependenciesComplete();
+            if (node.allDependenciesComplete()) {
+                readyNodes.add(node);
+            }
         }
 
         maybeNodesSelectable = true;
@@ -527,7 +533,62 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
 
     @Override
     public Set<Task> getTasks() {
-        return nodeMapping.getTasks();
+        Set<Task> tasks = new LinkedHashSet<>(executionQueue.size());
+        Set<Node> complete = new HashSet<>();
+        List<Node> queue = new ArrayList<>(readyNodes);
+        while (!queue.isEmpty()) {
+            int index = selectNextReady(queue, complete);
+            Node node = queue.remove(index);
+            if (node instanceof LocalTaskNode) {
+                tasks.add(((LocalTaskNode) node).getTask());
+            }
+            complete.add(node);
+            node.visitAllNodesWaitingForThisNode(new DependenciesCompleteCollector(index, queue, complete));
+        }
+        return tasks;
+    }
+
+    private int selectNextReady(List<Node> queue, Set<Node> complete) {
+        int match = -1;
+        boolean weakMatch = false;
+        for (int i = 0; i < queue.size(); i++) {
+            Node node = queue.get(i);
+            if (node.isPriority() || isEnabledFinalizer(node.getGroup(), complete)) {
+                return i;
+            }
+            if (match < 0 && shouldNotRunYet(node, complete)) {
+                match = i;
+                weakMatch = true;
+            } else if (weakMatch || match < 0) {
+                match = i;
+                weakMatch = false;
+            }
+        }
+        return match;
+    }
+
+    private boolean isEnabledFinalizer(NodeGroup group, Set<Node> completed) {
+        if (!(group instanceof HasFinalizers)) {
+            return false;
+        }
+        HasFinalizers hasFinalizers = (HasFinalizers) group;
+        for (FinalizerGroup finalizerGroup : hasFinalizers.getFinalizerGroups()) {
+            for (Node node : finalizerGroup.getFinalizedNodes()) {
+                if (completed.contains(node)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean shouldNotRunYet(Node node, Set<Node> complete) {
+        for (Node successor : node.getWeakSuccessors()) {
+            if (!complete.contains(successor)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -1162,6 +1223,35 @@ public class DefaultExecutionPlan implements ExecutionPlan, WorkSource<Node> {
 
         public boolean isDestroyer() {
             return isDestroyer;
+        }
+    }
+
+    private static class DependenciesCompleteCollector implements Consumer<Node> {
+        private int index;
+        private final List<Node> queue;
+        private final Set<Node> complete;
+
+        public DependenciesCompleteCollector(int index, List<Node> queue, Set<Node> complete) {
+            this.index = index;
+            this.queue = queue;
+            this.complete = complete;
+        }
+
+        @Override
+        public void accept(Node node) {
+            if (node.isRequired() && allSuccessorsComplete(node, complete) && !complete.contains(node)) {
+                queue.add(index, node);
+                index++;
+            }
+        }
+
+        private boolean allSuccessorsComplete(Node node, Set<Node> complete) {
+            for (Node successor : node.getAllSuccessors()) {
+                if (successor.isRequired() && !complete.contains(successor)) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
