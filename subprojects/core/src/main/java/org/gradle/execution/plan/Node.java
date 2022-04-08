@@ -51,7 +51,7 @@ public abstract class Node implements Comparable<Node> {
         FAILED_DEPENDENCY
     }
 
-    enum DependenciesState {
+    public enum DependenciesState {
         // Still waiting for dependencies to complete
         NOT_COMPLETE,
         // All dependencies complete, can run this node
